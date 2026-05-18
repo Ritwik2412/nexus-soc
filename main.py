@@ -8,7 +8,8 @@ import os
 
 app = FastAPI(title="NEXUS Multi-Agent System")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
