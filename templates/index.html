@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Multi-Agent Intelligence System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --teal: #1D6F6A; --teal-light: #E8F4F3; --teal-mid: #2B9E96;
+  --accent: #C85A1A; --surface: #FAFAF8; --surface-2: #F3F2EF;
+  --border: rgba(0,0,0,0.09); --border-med: rgba(0,0,0,0.15);
+  --t1: #1A1A18; --t2: #5C5C57; --t3: #9A9A94;
+}
+body { font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--t1); min-height: 100vh; }
+.shell { display: grid; grid-template-rows: 56px 1fr; height: 100vh; }
+header {
+  display: flex; align-items: center; gap: 16px; padding: 0 28px;
+  border-bottom: 0.5px solid var(--border-med); background: white;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { width: 32px; height: 32px; background: var(--teal); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.logo svg { width: 18px; height: 18px; }
+.header-title { font-size: 15px; font-weight: 500; letter-spacing: -0.01em; }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--t3); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: #3B6D11; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+.main { display: grid; grid-template-columns: 260px 1fr; height: calc(100vh - 56px); overflow: hidden; }
+.sidebar { border-right: 0.5px solid var(--border-med); background: white; overflow-y: auto; padding: 20px 0; }
+.s-section { padding: 0 16px 20px; }
+.s-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); padding: 0 4px; margin-bottom: 10px; }
+.agent-card { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 8px; margin-bottom: 4px; border: 0.5px solid transparent; transition: all 0.15s; }
+.agent-card:hover { background: var(--surface-2); }
+.agent-card.active { background: var(--teal-light); border-color: rgba(29,111,106,0.2); }
+.a-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-family: 'DM Mono',monospace; font-weight: 500; flex-shrink: 0; }
+.a-name { font-size: 13px; font-weight: 500; }
+.a-role { font-size: 11px; color: var(--t3); margin-top: 2px; }
+.a-badge { margin-left: auto; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 500; flex-shrink: 0; background: var(--surface-2); color: var(--t3); }
+.stat-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+.stat-val { font-weight: 500; font-family: 'DM Mono',monospace; }
+.content { display: flex; flex-direction: column; overflow: hidden; }
+.tabs { display: flex; padding: 0 24px; border-bottom: 0.5px solid var(--border-med); background: white; gap: 0; }
+.tab { padding: 14px 18px; font-size: 13px; color: var(--t2); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+.tab.active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 500; }
+.tab-body { flex: 1; overflow-y: auto; padding: 24px; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+.query-box { background: white; border: 0.5px solid var(--border-med); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+.q-wrap { display: flex; gap: 10px; align-items: flex-end; }
+textarea { flex: 1; font-family: 'DM Sans',sans-serif; font-size: 14px; background: var(--surface-2); border: 0.5px solid var(--border-med); border-radius: 8px; padding: 12px 14px; resize: none; min-height: 80px; outline: none; transition: border-color 0.15s; color: var(--t1); }
+textarea:focus { border-color: var(--teal); background: white; }
+textarea::placeholder { color: var(--t3); }
+.run-btn { background: var(--teal); color: white; border: none; border-radius: 8px; padding: 12px 20px; font-family: 'DM Sans',sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s; white-space: nowrap; }
+.run-btn:hover:not(:disabled) { background: #145855; }
+.run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.chips { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.chip-label { font-size: 11px; color: var(--t3); }
+.chip { font-size: 11px; padding: 4px 10px; border: 0.5px solid var(--border-med); border-radius: 20px; cursor: pointer; color: var(--t2); background: white; transition: all 0.12s; }
+.chip:hover { background: var(--teal-light); color: var(--teal); border-color: rgba(29,111,106,0.3); }
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 20px; text-align: center; }
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.35; }
+.empty-title { font-size: 14px; font-weight: 500; color: var(--t2); }
+.empty-sub { font-size: 12px; color: var(--t3); margin-top: 4px; }
+.progress-wrap { margin-bottom: 16px; }
+.progress-top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.progress-bar-bg { flex: 1; background: var(--surface-2); border-radius: 4px; height: 4px; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--teal); width: 0%; transition: width 0.5s ease; }
+.progress-label { font-size: 12px; color: var(--t3); font-family: 'DM Mono',monospace; }
+.live-agent-label { font-size: 13px; color: var(--teal); font-weight: 500; margin-bottom: 12px; min-height: 20px; }
+.live-out { background: white; border: 0.5px solid var(--border-med); border-radius: 10px; padding: 16px; font-size: 12px; font-family: 'DM Mono',monospace; line-height: 1.7; color: var(--t2); min-height: 140px; max-height: 360px; overflow-y: auto; white-space: pre-wrap; }
+.sec-banner { background: #FAEEEA; border: 0.5px solid rgba(163,45,45,0.25); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #7A2A2A; display: none; align-items: center; gap: 8px; margin-bottom: 14px; }
+.sec-banner.show { display: flex; }
+.pipeline-step { background: white; border: 0.5px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.pipeline-step.done { border-color: rgba(59,109,17,0.3); }
+.pipeline-step.error { border-color: rgba(163,45,45,0.35); }
+.step-hdr { display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; }
+.step-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.step-name { font-size: 13px; font-weight: 500; }
+.step-desc { font-size: 12px; color: var(--t3); margin-left: auto; font-style: italic; }
+.step-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; margin-left: 8px; }
+.step-body { border-top: 0.5px solid var(--border); padding: 14px 16px; font-size: 12px; font-family: 'DM Mono',monospace; line-height: 1.65; color: var(--t2); display: none; white-space: pre-wrap; max-height: 280px; overflow-y: auto; background: var(--surface); }
+.step-body.open { display: block; }
+.report-box { background: white; border: 0.5px solid var(--border-med); border-radius: 12px; overflow: hidden; }
+.report-topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 0.5px solid var(--border); background: var(--surface); }
+.report-topbar-title { font-size: 13px; font-weight: 500; }
+.copy-btn { font-size: 12px; padding: 5px 12px; border: 0.5px solid var(--border-med); border-radius: 6px; background: white; cursor: pointer; color: var(--t2); font-family: 'DM Sans',sans-serif; transition: all 0.12s; display: flex; align-items: center; gap: 5px; }
+.copy-btn:hover { background: var(--teal-light); color: var(--teal); }
+.report-body { padding: 28px 32px; font-size: 14px; line-height: 1.8; color: var(--t1); min-height: 200px; white-space: pre-wrap; }
+.placeholder { color: var(--t3); font-style: italic; font-size: 13px; }
+.arch-box { background: white; border: 0.5px solid var(--border-med); border-radius: 12px; padding: 24px; }
+.arch-flow { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0; margin-bottom: 28px; }
+.arch-node { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 12px; border-radius: 10px; min-width: 100px; text-align: center; border: 0.5px solid var(--border-med); background: white; }
+.arch-node-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.arch-node-name { font-size: 11px; font-weight: 500; }
+.arch-node-role { font-size: 10px; color: var(--t3); }
+.arch-arrow { color: var(--t3); font-size: 16px; padding: 0 4px; }
+.sec-title { font-size: 11px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--t3); margin-bottom: 12px; }
+.guardrail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.guardrail-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border-radius: 8px; border: 0.5px solid var(--border); background: var(--surface); }
+.g-icon { font-size: 18px; flex-shrink: 0; }
+.g-title { font-size: 12px; font-weight: 500; }
+.g-desc { font-size: 11px; color: var(--t3); margin-top: 2px; line-height: 1.4; }
+.tag { font-size: 11px; padding: 4px 10px; border-radius: 4px; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
+      </svg>
+    </div>
+    <span class="header-title">NEXUS — Multi-Agent Intelligence System</span>
+    <div class="header-right">
+      <span class="dot"></span>
+      5 agents ready · Powered by Groq + Llama 3.3
+    </div>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar">
+      <div class="s-section">
+        <div class="s-label">Active Agents</div>
+        <div class="agent-card" id="card-security">
+          <div class="a-icon" style="background:#FAECE7;color:#993C1D;">S</div>
+          <div><div class="a-name">Security Guard</div><div class="a-role">Input validation & guardrails</div></div>
+          <span class="a-badge" id="badge-security">idle</span>
+        </div>
+        <div class="agent-card" id="card-orchestrator">
+          <div class="a-icon" style="background:#E8F4F3;color:#1D6F6A;">O</div>
+          <div><div class="a-name">Orchestrator</div><div class="a-role">Task decomposition & routing</div></div>
+          <span class="a-badge" id="badge-orchestrator">idle</span>
+        </div>
+        <div class="agent-card" id="card-researcher">
+          <div class="a-icon" style="background:#E6F1FB;color:#185FA5;">R</div>
+          <div><div class="a-name">Researcher</div><div class="a-role">Information synthesis</div></div>
+          <span class="a-badge" id="badge-researcher">idle</span>
+        </div>
+        <div class="agent-card" id="card-critic">
+          <div class="a-icon" style="background:#FAEEDA;color:#854F0B;">C</div>
+          <div><div class="a-name">Critic</div><div class="a-role">Quality & bias analysis</div></div>
+          <span class="a-badge" id="badge-critic">idle</span>
+        </div>
+        <div class="agent-card" id="card-reporter">
+          <div class="a-icon" style="background:#EAF3DE;color:#3B6D11;">W</div>
+          <div><div class="a-name">Report Writer</div><div class="a-role">Structured output generation</div></div>
+          <span class="a-badge" id="badge-reporter">idle</span>
+        </div>
+      </div>
+      <div class="s-section" style="border-top:0.5px solid var(--border);padding-top:20px;">
+        <div class="s-label">Session Stats</div>
+        <div class="stat-row"><span style="color:var(--t3)">Queries run</span><span class="stat-val" id="st-queries">0</span></div>
+        <div class="stat-row"><span style="color:var(--t3)">Agents invoked</span><span class="stat-val" id="st-agents">0</span></div>
+        <div class="stat-row"><span style="color:var(--t3)">Blocked inputs</span><span class="stat-val" id="st-blocked" style="color:#A32D2D">0</span></div>
+      </div>
+      <div class="s-section" style="padding-top:8px;">
+        <div class="s-label">Model</div>
+        <div style="font-size:12px;color:var(--t2);font-weight:500;">Llama 3.3 70B</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:4px;line-height:1.4;">Groq API · 5 agents with distinct system prompts</div>
+      </div>
+    </aside>
+
+    <div class="content">
+      <div class="tabs">
+        <div class="tab active" data-tab="run">▶ Run Query</div>
+        <div class="tab" data-tab="pipeline">≡ Pipeline Trace</div>
+        <div class="tab" data-tab="report">⎗ Final Report</div>
+        <div class="tab" data-tab="arch">⬡ Architecture</div>
+      </div>
+
+      <div class="tab-body">
+
+        <!-- RUN -->
+        <div class="tab-pane active" id="pane-run">
+          <div class="sec-banner" id="sec-banner">
+            🛡 <span id="sec-text">Security guardrail triggered.</span>
+          </div>
+          <div class="query-box">
+            <div style="font-size:12px;font-weight:500;color:var(--t2);margin-bottom:10px;">Research query</div>
+            <div class="q-wrap">
+              <textarea id="user-query" placeholder="Ask a complex research question... e.g. 'What are the systemic risks in global supply chains post-2020?'" rows="3"></textarea>
+              <button class="run-btn" id="run-btn" onclick="runPipeline()">▶ Run</button>
+            </div>
+            <div class="chips">
+              <span class="chip-label">Try:</span>
+              <span class="chip" onclick="setQ('What are the major risks and opportunities in AI adoption for enterprise businesses?')">AI enterprise risks</span>
+              <span class="chip" onclick="setQ('Analyze the geopolitical factors influencing global semiconductor supply chains.')">Semiconductor supply chains</span>
+              <span class="chip" onclick="setQ('What are the key trends shaping the future of wealth management and fintech?')">Fintech & wealth mgmt</span>
+            </div>
+          </div>
+          <div id="idle-state" class="empty-state">
+            <div class="empty-icon">⬡</div>
+            <div class="empty-title">Agents standing by</div>
+            <div class="empty-sub">Enter a query above and hit Run to activate the pipeline</div>
+          </div>
+          <div id="run-view" style="display:none;">
+            <div class="progress-wrap">
+              <div class="progress-top">
+                <div class="progress-bar-bg"><div class="progress-bar" id="pbar"></div></div>
+                <span class="progress-label" id="plabel">0 / 5</span>
+              </div>
+            </div>
+            <div class="live-agent-label" id="live-label"></div>
+            <div class="live-out" id="live-out"></div>
+          </div>
+        </div>
+
+        <!-- PIPELINE -->
+        <div class="tab-pane" id="pane-pipeline">
+          <div id="pipe-empty" class="empty-state">
+            <div class="empty-icon">◎</div>
+            <div class="empty-title">No pipeline run yet</div>
+            <div class="empty-sub">Run a query to see the agent-by-agent execution trace</div>
+          </div>
+          <div id="pipe-steps" style="display:none;"></div>
+        </div>
+
+        <!-- REPORT -->
+        <div class="tab-pane" id="pane-report">
+          <div class="report-box">
+            <div class="report-topbar">
+              <span class="report-topbar-title">Generated intelligence report</span>
+              <button class="copy-btn" onclick="copyReport()">⎗ Copy</button>
+            </div>
+            <div class="report-body" id="report-out">
+              <span class="placeholder">Your structured intelligence report will appear here after a pipeline run completes.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ARCH -->
+        <div class="tab-pane" id="pane-arch">
+          <div class="arch-box">
+            <div class="sec-title">System architecture — sequential agent pipeline</div>
+            <div class="arch-flow">
+              <div class="arch-node">
+                <div class="arch-node-icon" style="background:#F3F2EF;">👤</div>
+                <div class="arch-node-name">User</div>
+                <div class="arch-node-role">Query input</div>
+              </div>
+              <span class="arch-arrow">→</span>
+              <div class="arch-node" style="border-color:rgba(163,45,45,0.3);">
+                <div class="arch-node-icon" style="background:#FAECE7;">🛡</div>
+                <div class="arch-node-name">Security Guard</div>
+                <div class="arch-node-role">Validates & filters</div>
+              </div>
+              <span class="arch-arrow">→</span>
+              <div class="arch-node" style="border-color:rgba(29,111,106,0.3);">
+                <div class="arch-node-icon" style="background:#E8F4F3;">🧭</div>
+                <div class="arch-node-name">Orchestrator</div>
+                <div class="arch-node-role">Decomposes task</div>
+              </div>
+              <span class="arch-arrow">→</span>
+              <div class="arch-node" style="border-color:rgba(24,95,165,0.3);">
+                <div class="arch-node-icon" style="background:#E6F1FB;">🔬</div>
+                <div class="arch-node-name">Researcher</div>
+                <div class="arch-node-role">Gathers intel</div>
+              </div>
+              <span class="arch-arrow">→</span>
+              <div class="arch-node" style="border-color:rgba(133,79,11,0.3);">
+                <div class="arch-node-icon" style="background:#FAEEDA;">🔍</div>
+                <div class="arch-node-name">Critic</div>
+                <div class="arch-node-role">Reviews & refines</div>
+              </div>
+              <span class="arch-arrow">→</span>
+              <div class="arch-node" style="border-color:rgba(59,109,17,0.3);">
+                <div class="arch-node-icon" style="background:#EAF3DE;">📝</div>
+                <div class="arch-node-name">Report Writer</div>
+                <div class="arch-node-role">Structures output</div>
+              </div>
+            </div>
+            <div style="margin-bottom:20px;">
+              <div class="sec-title">Communication pattern</div>
+              <div style="font-size:13px;color:var(--t2);line-height:1.7;background:var(--surface-2);border-radius:8px;padding:14px 16px;">
+                Agents operate <strong>sequentially</strong> in a directed pipeline. Each agent receives the prior agent's structured output as its input context — a <em>chain-of-thought relay</em> architecture. All inter-agent messages pass through a shared context object managed by the FastAPI backend. No shared mutable state between agents.
+              </div>
+            </div>
+            <div style="margin-bottom:20px;">
+              <div class="sec-title">Security guardrails</div>
+              <div class="guardrail-grid">
+                <div class="guardrail-item"><div class="g-icon">🔒</div><div><div class="g-title">Prompt injection defense</div><div class="g-desc">Security agent classifies all inputs before they reach any LLM. Jailbreaks and injections are rejected at the gate.</div></div></div>
+                <div class="guardrail-item"><div class="g-icon">🎭</div><div><div class="g-title">Role constraint enforcement</div><div class="g-desc">Each agent has a scoped system prompt. No agent can invoke another — all routing flows through the backend orchestrator.</div></div></div>
+                <div class="guardrail-item"><div class="g-icon">📵</div><div><div class="g-title">Output filtering</div><div class="g-desc">Critic agent checks for hallucinations, PII leakage, and ungrounded claims before report generation proceeds.</div></div></div>
+                <div class="guardrail-item"><div class="g-icon">📋</div><div><div class="g-title">Full audit trail</div><div class="g-desc">Every agent invocation is logged with its input, output, and decision rationale. Visible in Pipeline Trace tab.</div></div></div>
+              </div>
+            </div>
+            <div>
+              <div class="sec-title">Tech stack</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                <span class="tag" style="background:#E8F4F3;color:#1D6F6A;">Llama 3.3 70B</span>
+                <span class="tag" style="background:var(--surface-2);color:var(--t2);">FastAPI + Python</span>
+                <span class="tag" style="background:var(--surface-2);color:var(--t2);">Sequential Agent Pipeline</span>
+                <span class="tag" style="background:var(--surface-2);color:var(--t2);">AWS Elastic Beanstalk</span>
+                <span class="tag" style="background:#FAF0E8;color:#C85A1A;">REST API Backend</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const AGENT_COLORS = {
+  security: '#A32D2D', orchestrator: '#1D6F6A',
+  researcher: '#185FA5', critic: '#854F0B', reporter: '#3B6D11'
+};
+const AGENT_BADGE = {
+  security: {bg:'#FAECE7',txt:'#993C1D'}, orchestrator: {bg:'#E8F4F3',txt:'#1D6F6A'},
+  researcher: {bg:'#E6F1FB',txt:'#185FA5'}, critic: {bg:'#FAEEDA',txt:'#854F0B'},
+  reporter: {bg:'#EAF3DE',txt:'#3B6D11'}
+};
+
+let queries=0, agents=0, blocked=0, currentReport='';
+
+function setQ(q){ document.getElementById('user-query').value = q; }
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('pane-' + t.dataset.tab).classList.add('active');
+  });
+});
+
+function setAgent(key, status) {
+  const badge = document.getElementById('badge-' + key);
+  const card = document.getElementById('card-' + key);
+  if (!badge) return;
+  const labels = { idle:'idle', running:'active', done:'done', error:'error' };
+  badge.textContent = labels[status] || 'idle';
+  if (status === 'running') {
+    badge.style.background = AGENT_BADGE[key]?.bg || '#eee';
+    badge.style.color = AGENT_BADGE[key]?.txt || '#333';
+    card.classList.add('active');
+  } else if (status === 'done') {
+    badge.style.background = '#EAF3DE'; badge.style.color = '#3B6D11';
+    card.classList.remove('active');
+  } else if (status === 'error') {
+    badge.style.background = '#FAECE7'; badge.style.color = '#993C1D';
+    card.classList.remove('active');
+  } else {
+    badge.style.background = '#F3F2EF'; badge.style.color = '#9A9A94';
+    card.classList.remove('active');
+  }
+}
+
+function resetAgents(){ ['security','orchestrator','researcher','critic','reporter'].forEach(k=>setAgent(k,'idle')); }
+
+function addStep(key, label, content, status) {
+  const wrap = document.getElementById('pipe-steps');
+  const el = document.createElement('div');
+  el.className = 'pipeline-step ' + status;
+  el.innerHTML = `
+    <div class="step-hdr" onclick="this.nextElementSibling.classList.toggle('open')">
+      <div class="step-dot" style="background:${AGENT_COLORS[key]||'#888'}"></div>
+      <span class="step-name">${{security:'Security Guard',orchestrator:'Orchestrator',researcher:'Researcher',critic:'Critic',reporter:'Report Writer'}[key]}</span>
+      <span class="step-desc">${label}</span>
+      <span class="step-badge" style="background:${status==='done'?'#EAF3DE':status==='error'?'#FAECE7':'#F3F2EF'};color:${status==='done'?'#3B6D11':status==='error'?'#A32D2D':'#888'}">${status}</span>
+    </div>
+    <div class="step-body open">${content}</div>
+  `;
+  wrap.appendChild(el);
+}
+
+function updateProgress(step, label) {
+  document.getElementById('pbar').style.width = Math.round((step/5)*100)+'%';
+  document.getElementById('plabel').textContent = step+' / 5';
+  document.getElementById('live-label').textContent = '→ ' + label;
+}
+
+async function runPipeline() {
+  const query = document.getElementById('user-query').value.trim();
+  if (!query) return;
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  resetAgents();
+  queries++;
+  document.getElementById('st-queries').textContent = queries;
+
+  document.getElementById('idle-state').style.display = 'none';
+  document.getElementById('run-view').style.display = 'block';
+  document.getElementById('sec-banner').classList.remove('show');
+  document.getElementById('pipe-steps').innerHTML = '';
+  document.getElementById('pipe-empty').style.display = 'none';
+  document.getElementById('pipe-steps').style.display = 'block';
+  document.getElementById('report-out').innerHTML = '<span class="placeholder">Generating…</span>';
+  document.getElementById('live-label').style.color = '#1D6F6A';
+
+  const liveOut = document.getElementById('live-out');
+
+  ['security','orchestrator','researcher','critic','reporter'].forEach(k => setAgent(k, 'idle'));
+
+  updateProgress(0, 'Sending query to pipeline...');
+  liveOut.textContent = 'Initializing pipeline...';
+
+  setAgent('security','running');
+  updateProgress(0, 'Security Guard — validating input...');
+  liveOut.textContent = 'Security Guard scanning input for threats...';
+
+  try {
+    const resp = await fetch('/api/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
+    const data = await resp.json();
+
+    if (data.detail) {
+      liveOut.textContent = 'Error: ' + data.detail;
+      btn.disabled = false;
+      return;
+    }
+
+    const pipe = data.pipeline || {};
+    let step = 0;
+
+    for (const [key, info] of Object.entries(pipe)) {
+      step++;
+      agents++;
+      document.getElementById('st-agents').textContent = agents;
+      setAgent(key, info.status || 'done');
+      addStep(key, getLabel(key), info.output || '', info.status || 'done');
+      updateProgress(step, (info.agent || key) + ' — complete');
+    }
+
+    if (data.blocked) {
+      blocked++;
+      document.getElementById('st-blocked').textContent = blocked;
+      document.getElementById('sec-text').textContent = 'Input blocked: ' + data.reason + ' (Threat: ' + data.threat_type + ')';
+      document.getElementById('sec-banner').classList.add('show');
+      liveOut.textContent = '⚠ Query blocked by Security Guard.\n\nReason: ' + data.reason + '\nThreat type: ' + data.threat_type;
+      updateProgress(1, 'Pipeline halted — security guardrail triggered');
+      document.getElementById('plabel').textContent = 'Blocked';
+    } else {
+      currentReport = data.report || '';
+      document.getElementById('report-out').textContent = currentReport;
+      liveOut.textContent = '✓ Pipeline complete — all agents executed.\n\n' + currentReport.slice(0, 500) + '...';
+      updateProgress(5, 'Pipeline complete');
+      document.getElementById('live-label').style.color = '#3B6D11';
+      document.querySelectorAll('.tab')[2].click();
+    }
+
+  } catch(e) {
+    liveOut.textContent = 'Network error: ' + e.message + '\n\nMake sure the server is running.';
+    document.getElementById('live-label').textContent = '✗ Error';
+    document.getElementById('live-label').style.color = '#A32D2D';
+  }
+
+  btn.disabled = false;
+}
+
+function getLabel(key) {
+  return {security:'Input validation',orchestrator:'Task decomposition',researcher:'Information synthesis',critic:'Quality & bias review',reporter:'Report generation'}[key] || key;
+}
+
+function copyReport() {
+  if (currentReport) navigator.clipboard.writeText(currentReport).catch(()=>{});
+}
+</script>
+</body>
+</html>
