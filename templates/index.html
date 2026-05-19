@@ -1,514 +1,1283 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXUS-SOC — AI Security Operations Center</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --red: #A32D2D; --red-light: #FAECE7; --red-mid: #C0392B;
-  --teal: #1D6F6A; --teal-light: #E8F4F3;
-  --orange: #C85A1A; --orange-light: #FAF0E8;
-  --surface: #0F1117; --surface-2: #1A1D27; --surface-3: #22263A;
-  --border: rgba(255,255,255,0.07); --border-med: rgba(255,255,255,0.12);
-  --t1: #E8E8F0; --t2: #9A9AB0; --t3: #5C5C7A;
-  --green: #2ECC71; --green-light: rgba(46,204,113,0.1);
-  --yellow: #F39C12; --yellow-light: rgba(243,156,18,0.1);
-  --critical: #E74C3C; --critical-light: rgba(231,76,60,0.1);
-}
-body { font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--t1); min-height: 100vh; }
-.shell { display: grid; grid-template-rows: 56px 1fr; height: 100vh; }
-header {
-  display: flex; align-items: center; gap: 16px; padding: 0 28px;
-  border-bottom: 0.5px solid var(--border-med);
-  background: rgba(15,17,23,0.95); backdrop-filter: blur(10px);
-  position: sticky; top: 0; z-index: 100;
-}
-.logo { width: 32px; height: 32px; background: var(--red); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
-.logo svg { width: 18px; height: 18px; }
-.header-title { font-size: 15px; font-weight: 500; letter-spacing: -0.01em; color: var(--t1); }
-.header-sub { font-size: 11px; color: var(--t2); }
-.header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-.threat-level {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 11px; font-weight: 500; padding: 4px 10px;
-  border-radius: 4px; background: var(--green-light);
-  color: var(--green); border: 0.5px solid rgba(46,204,113,0.25);
-  font-family: 'DM Mono', monospace;
-}
-.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
-.main { display: grid; grid-template-columns: 270px 1fr; height: calc(100vh - 56px); overflow: hidden; }
-.sidebar { border-right: 0.5px solid var(--border-med); background: var(--surface-2); overflow-y: auto; padding: 20px 0; }
-.s-section { padding: 0 16px 20px; }
-.s-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--t3); padding: 0 4px; margin-bottom: 10px; }
-.agent-card { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 8px; margin-bottom: 4px; border: 0.5px solid transparent; transition: all 0.15s; cursor: default; }
-.agent-card:hover { background: var(--surface-3); }
-.agent-card.active { background: rgba(163,45,45,0.1); border-color: rgba(163,45,45,0.3); }
-.agent-card.approved { background: var(--green-light); border-color: rgba(46,204,113,0.2); }
-.a-icon { width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-family: 'DM Mono',monospace; font-weight: 500; flex-shrink: 0; }
-.a-name { font-size: 13px; font-weight: 500; color: var(--t1); }
-.a-role { font-size: 11px; color: var(--t3); margin-top: 2px; }
-.a-badge { margin-left: auto; font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 500; flex-shrink: 0; font-family: 'DM Mono',monospace; background: var(--surface-3); color: var(--t3); }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXUS-SOC — AI Security Operations Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
-.meta-card { background: var(--surface-3); border-radius: 8px; padding: 10px 12px; border: 0.5px solid var(--border); }
-.meta-val { font-size: 18px; font-weight: 500; font-family: 'DM Mono',monospace; color: var(--t1); }
-.meta-key { font-size: 10px; color: var(--t3); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+    :root {
+      --red: #A32D2D;
+      --red-light: #FAECE7;
+      --red-mid: #C0392B;
+      --teal: #1D6F6A;
+      --teal-light: #E8F4F3;
+      --orange: #C85A1A;
+      --orange-light: #FAF0E8;
+      --surface: #0F1117;
+      --surface-2: #1A1D27;
+      --surface-3: #22263A;
+      --border: rgba(255, 255, 255, 0.07);
+      --border-med: rgba(255, 255, 255, 0.12);
+      --t1: #E8E8F0;
+      --t2: #9A9AB0;
+      --t3: #5C5C7A;
+      --green: #2ECC71;
+      --green-light: rgba(46, 204, 113, 0.1);
+      --yellow: #F39C12;
+      --yellow-light: rgba(243, 156, 18, 0.1);
+      --critical: #E74C3C;
+      --critical-light: rgba(231, 76, 60, 0.1);
+    }
 
-.content { display: flex; flex-direction: column; overflow: hidden; background: var(--surface); }
-.tabs { display: flex; padding: 0 24px; border-bottom: 0.5px solid var(--border-med); background: var(--surface-2); }
-.tab { padding: 14px 18px; font-size: 13px; color: var(--t2); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
-.tab.active { color: var(--red); border-bottom-color: var(--red); font-weight: 500; }
-.tab:hover:not(.active) { color: var(--t1); }
-.tab-body { flex: 1; overflow-y: auto; padding: 24px; }
-.tab-pane { display: none; }
-.tab-pane.active { display: block; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface);
+      color: var(--t1);
+      min-height: 100vh;
+    }
 
-.alert-box { background: var(--surface-2); border: 0.5px solid var(--border-med); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-.alert-label { font-size: 12px; font-weight: 500; color: var(--t2); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-.alert-label span { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: var(--red-light); color: var(--red); font-family: 'DM Mono',monospace; }
-.q-wrap { display: flex; gap: 10px; align-items: flex-end; }
-textarea {
-  flex: 1; font-family: 'DM Mono',monospace; font-size: 13px;
-  background: var(--surface-3); border: 0.5px solid var(--border-med);
-  border-radius: 8px; padding: 14px; resize: none; min-height: 100px;
-  outline: none; transition: border-color 0.15s; color: var(--t1); line-height: 1.6;
-}
-textarea:focus { border-color: var(--red); }
-textarea::placeholder { color: var(--t3); font-family: 'DM Mono',monospace; }
-.run-btn {
-  background: var(--red); color: white; border: none; border-radius: 8px;
-  padding: 14px 22px; font-family: 'DM Sans',sans-serif; font-size: 13px;
-  font-weight: 500; cursor: pointer; display: flex; align-items: center;
-  gap: 8px; transition: all 0.15s; white-space: nowrap; height: fit-content;
-}
-.run-btn:hover:not(:disabled) { background: #8a2020; transform: translateY(-1px); }
-.run-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .shell {
+      display: grid;
+      grid-template-rows: 56px 1fr;
+      height: 100vh;
+    }
 
-.scenarios { margin-top: 14px; }
-.sc-label { font-size: 11px; color: var(--t3); margin-bottom: 8px; }
-.sc-chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.chip {
-  font-size: 11px; padding: 5px 12px; border: 0.5px solid var(--border-med);
-  border-radius: 20px; cursor: pointer; color: var(--t2);
-  background: var(--surface-3); transition: all 0.12s; font-family: 'DM Mono',monospace;
-}
-.chip:hover { background: var(--red-light); color: var(--red); border-color: rgba(163,45,45,0.4); }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 28px;
+      border-bottom: 0.5px solid var(--border-med);
+      background: rgba(15, 17, 23, 0.95);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
-.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 20px; text-align: center; }
-.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.25; }
-.empty-title { font-size: 14px; font-weight: 500; color: var(--t2); }
-.empty-sub { font-size: 12px; color: var(--t3); margin-top: 4px; }
+    .logo {
+      width: 32px;
+      height: 32px;
+      background: var(--red);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-.sec-banner { background: rgba(163,45,45,0.15); border: 0.5px solid rgba(163,45,45,0.4); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #E57373; display: none; align-items: center; gap: 10px; margin-bottom: 16px; font-family: 'DM Mono',monospace; }
-.sec-banner.show { display: flex; }
+    .logo svg {
+      width: 18px;
+      height: 18px;
+    }
 
-.progress-wrap { margin-bottom: 16px; }
-.progress-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.progress-bar-bg { flex: 1; background: var(--surface-3); border-radius: 4px; height: 3px; overflow: hidden; margin-right: 12px; }
-.progress-bar { height: 100%; background: var(--red); width: 0%; transition: width 0.5s ease; }
-.progress-label { font-size: 11px; color: var(--t3); font-family: 'DM Mono',monospace; }
-.live-label { font-size: 13px; color: var(--red); font-weight: 500; margin-bottom: 12px; min-height: 20px; font-family: 'DM Mono',monospace; }
-.live-out {
-  background: var(--surface-2); border: 0.5px solid var(--border-med);
-  border-radius: 10px; padding: 16px; font-size: 12px;
-  font-family: 'DM Mono',monospace; line-height: 1.7; color: var(--t2);
-  min-height: 160px; max-height: 400px; overflow-y: auto; white-space: pre-wrap;
-}
+    .header-title {
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: var(--t1);
+    }
 
-.pipeline-step { background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
-.pipeline-step.done { border-color: rgba(46,204,113,0.25); }
-.pipeline-step.error { border-color: rgba(231,76,60,0.35); }
-.pipeline-step.retry { border-color: rgba(243,156,18,0.35); }
-.step-hdr { display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; }
-.step-hdr:hover { background: var(--surface-3); }
-.step-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.step-name { font-size: 13px; font-weight: 500; color: var(--t1); }
-.step-desc { font-size: 11px; color: var(--t3); margin-left: auto; font-style: italic; font-family: 'DM Mono',monospace; }
-.step-badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 500; margin-left: 8px; font-family: 'DM Mono',monospace; }
-.step-body { border-top: 0.5px solid var(--border); padding: 14px 16px; font-size: 12px; font-family: 'DM Mono',monospace; line-height: 1.65; color: var(--t2); display: none; white-space: pre-wrap; max-height: 300px; overflow-y: auto; background: var(--surface); }
-.step-body.open { display: block; }
+    .header-sub {
+      font-size: 11px;
+      color: var(--t2);
+    }
 
-.retry-banner { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--yellow-light); border-radius: 6px; font-size: 11px; color: var(--yellow); font-family: 'DM Mono',monospace; margin-bottom: 8px; border: 0.5px solid rgba(243,156,18,0.3); }
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-.report-box { background: var(--surface-2); border: 0.5px solid var(--border-med); border-radius: 12px; overflow: hidden; }
-.report-topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 0.5px solid var(--border); background: var(--surface-3); }
-.report-topbar-title { font-size: 13px; font-weight: 500; color: var(--t1); display: flex; align-items: center; gap: 10px; }
-.copy-btn { font-size: 12px; padding: 5px 12px; border: 0.5px solid var(--border-med); border-radius: 6px; background: var(--surface-2); cursor: pointer; color: var(--t2); font-family: 'DM Sans',sans-serif; transition: all 0.12s; }
-.copy-btn:hover { border-color: var(--red); color: var(--red); }
-.report-body { padding: 28px 32px; font-size: 13px; line-height: 1.85; color: var(--t1); min-height: 200px; white-space: pre-wrap; font-family: 'DM Mono',monospace; }
-.placeholder { color: var(--t3); font-style: italic; font-size: 13px; }
+    .threat-level {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: var(--green-light);
+      color: var(--green);
+      border: 0.5px solid rgba(46, 204, 113, 0.25);
+      font-family: 'DM Mono', monospace;
+    }
 
-.arch-box { background: var(--surface-2); border: 0.5px solid var(--border-med); border-radius: 12px; padding: 24px; }
-.arch-flow { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0; margin-bottom: 28px; }
-.arch-node { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 10px; border-radius: 10px; min-width: 90px; text-align: center; border: 0.5px solid var(--border-med); background: var(--surface-3); }
-.arch-node-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-.arch-node-name { font-size: 11px; font-weight: 500; color: var(--t1); line-height: 1.2; }
-.arch-node-role { font-size: 9px; color: var(--t3); }
-.arch-arrow { color: var(--t3); font-size: 14px; padding: 0 3px; }
-.arch-retry { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--yellow-light); border-radius: 8px; border: 0.5px solid rgba(243,156,18,0.3); font-size: 12px; color: var(--yellow); margin: 12px 0; font-family: 'DM Mono',monospace; }
-.sec-title { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--t3); margin-bottom: 12px; }
-.guardrail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.guardrail-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border-radius: 8px; border: 0.5px solid var(--border); background: var(--surface-3); }
-.g-icon { font-size: 16px; flex-shrink: 0; }
-.g-title { font-size: 12px; font-weight: 500; color: var(--t1); }
-.g-desc { font-size: 11px; color: var(--t3); margin-top: 2px; line-height: 1.4; }
-.tag { font-size: 11px; padding: 4px 10px; border-radius: 4px; font-weight: 500; }
-.severity-critical { color: var(--critical); }
-.severity-high { color: #E67E22; }
-.severity-medium { color: var(--yellow); }
-.severity-low { color: var(--green); }
-</style>
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.3
+      }
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+    }
+
+    .sidebar {
+      border-right: 0.5px solid var(--border-med);
+      background: var(--surface-2);
+      overflow-y: auto;
+      padding: 20px 0;
+    }
+
+    .s-section {
+      padding: 0 16px 20px;
+    }
+
+    .s-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--t3);
+      padding: 0 4px;
+      margin-bottom: 10px;
+    }
+
+    .agent-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      border: 0.5px solid transparent;
+      transition: all 0.15s;
+      cursor: default;
+    }
+
+    .agent-card:hover {
+      background: var(--surface-3);
+    }
+
+    .agent-card.active {
+      background: rgba(163, 45, 45, 0.1);
+      border-color: rgba(163, 45, 45, 0.3);
+    }
+
+    .agent-card.approved {
+      background: var(--green-light);
+      border-color: rgba(46, 204, 113, 0.2);
+    }
+
+    .a-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .a-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t1);
+    }
+
+    .a-role {
+      font-size: 11px;
+      color: var(--t3);
+      margin-top: 2px;
+    }
+
+    .a-badge {
+      margin-left: auto;
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 500;
+      flex-shrink: 0;
+      font-family: 'DM Mono', monospace;
+      background: var(--surface-3);
+      color: var(--t3);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .meta-card {
+      background: var(--surface-3);
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 0.5px solid var(--border);
+    }
+
+    .meta-val {
+      font-size: 18px;
+      font-weight: 500;
+      font-family: 'DM Mono', monospace;
+      color: var(--t1);
+    }
+
+    .meta-key {
+      font-size: 10px;
+      color: var(--t3);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .content {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .tabs {
+      display: flex;
+      padding: 0 24px;
+      border-bottom: 0.5px solid var(--border-med);
+      background: var(--surface-2);
+    }
+
+    .tab {
+      padding: 14px 18px;
+      font-size: 13px;
+      color: var(--t2);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab.active {
+      color: var(--red);
+      border-bottom-color: var(--red);
+      font-weight: 500;
+    }
+
+    .tab:hover:not(.active) {
+      color: var(--t1);
+    }
+
+    .tab-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .alert-box {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border-med);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .alert-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--t2);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alert-label span {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--red-light);
+      color: var(--red);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .q-wrap {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    textarea {
+      flex: 1;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      background: var(--surface-3);
+      border: 0.5px solid var(--border-med);
+      border-radius: 8px;
+      padding: 14px;
+      resize: none;
+      min-height: 100px;
+      outline: none;
+      transition: border-color 0.15s;
+      color: var(--t1);
+      line-height: 1.6;
+    }
+
+    textarea:focus {
+      border-color: var(--red);
+    }
+
+    textarea::placeholder {
+      color: var(--t3);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .run-btn {
+      background: var(--red);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 22px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s;
+      white-space: nowrap;
+      height: fit-content;
+    }
+
+    .run-btn:hover:not(:disabled) {
+      background: #8a2020;
+      transform: translateY(-1px);
+    }
+
+    .run-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .scenarios {
+      margin-top: 14px;
+    }
+
+    .sc-label {
+      font-size: 11px;
+      color: var(--t3);
+      margin-bottom: 8px;
+    }
+
+    .sc-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      font-size: 11px;
+      padding: 5px 12px;
+      border: 0.5px solid var(--border-med);
+      border-radius: 20px;
+      cursor: pointer;
+      color: var(--t2);
+      background: var(--surface-3);
+      transition: all 0.12s;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .chip:hover {
+      background: var(--red-light);
+      color: var(--red);
+      border-color: rgba(163, 45, 45, 0.4);
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 20px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+      opacity: 0.25;
+    }
+
+    .empty-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--t2);
+    }
+
+    .empty-sub {
+      font-size: 12px;
+      color: var(--t3);
+      margin-top: 4px;
+    }
+
+    .sec-banner {
+      background: rgba(163, 45, 45, 0.15);
+      border: 0.5px solid rgba(163, 45, 45, 0.4);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #E57373;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .sec-banner.show {
+      display: flex;
+    }
+
+    .progress-wrap {
+      margin-bottom: 16px;
+    }
+
+    .progress-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar-bg {
+      flex: 1;
+      background: var(--surface-3);
+      border-radius: 4px;
+      height: 3px;
+      overflow: hidden;
+      margin-right: 12px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--red);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .progress-label {
+      font-size: 11px;
+      color: var(--t3);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .live-label {
+      font-size: 13px;
+      color: var(--red);
+      font-weight: 500;
+      margin-bottom: 12px;
+      min-height: 20px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .live-out {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border-med);
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      line-height: 1.7;
+      color: var(--t2);
+      min-height: 160px;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .pipeline-step {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .pipeline-step.done {
+      border-color: rgba(46, 204, 113, 0.25);
+    }
+
+    .pipeline-step.error {
+      border-color: rgba(231, 76, 60, 0.35);
+    }
+
+    .pipeline-step.retry {
+      border-color: rgba(243, 156, 18, 0.35);
+    }
+
+    .step-hdr {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+    }
+
+    .step-hdr:hover {
+      background: var(--surface-3);
+    }
+
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .step-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t1);
+    }
+
+    .step-desc {
+      font-size: 11px;
+      color: var(--t3);
+      margin-left: auto;
+      font-style: italic;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .step-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+      margin-left: 8px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .step-body {
+      border-top: 0.5px solid var(--border);
+      padding: 14px 16px;
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      line-height: 1.65;
+      color: var(--t2);
+      display: none;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+      background: var(--surface);
+    }
+
+    .step-body.open {
+      display: block;
+    }
+
+    .retry-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: var(--yellow-light);
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--yellow);
+      font-family: 'DM Mono', monospace;
+      margin-bottom: 8px;
+      border: 0.5px solid rgba(243, 156, 18, 0.3);
+    }
+
+    .report-box {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border-med);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .report-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 0.5px solid var(--border);
+      background: var(--surface-3);
+    }
+
+    .report-topbar-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .copy-btn {
+      font-size: 12px;
+      padding: 5px 12px;
+      border: 0.5px solid var(--border-med);
+      border-radius: 6px;
+      background: var(--surface-2);
+      cursor: pointer;
+      color: var(--t2);
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.12s;
+    }
+
+    .copy-btn:hover {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .report-body {
+      padding: 28px 32px;
+      font-size: 13px;
+      line-height: 1.85;
+      color: var(--t1);
+      min-height: 200px;
+      white-space: pre-wrap;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .placeholder {
+      color: var(--t3);
+      font-style: italic;
+      font-size: 13px;
+    }
+
+    .arch-box {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border-med);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .arch-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0;
+      margin-bottom: 28px;
+    }
+
+    .arch-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 10px;
+      border-radius: 10px;
+      min-width: 90px;
+      text-align: center;
+      border: 0.5px solid var(--border-med);
+      background: var(--surface-3);
+    }
+
+    .arch-node-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .arch-node-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--t1);
+      line-height: 1.2;
+    }
+
+    .arch-node-role {
+      font-size: 9px;
+      color: var(--t3);
+    }
+
+    .arch-arrow {
+      color: var(--t3);
+      font-size: 14px;
+      padding: 0 3px;
+    }
+
+    .arch-retry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--yellow-light);
+      border-radius: 8px;
+      border: 0.5px solid rgba(243, 156, 18, 0.3);
+      font-size: 12px;
+      color: var(--yellow);
+      margin: 12px 0;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .sec-title {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--t3);
+      margin-bottom: 12px;
+    }
+
+    .guardrail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .guardrail-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 0.5px solid var(--border);
+      background: var(--surface-3);
+    }
+
+    .g-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .g-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--t1);
+    }
+
+    .g-desc {
+      font-size: 11px;
+      color: var(--t3);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .tag {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .severity-critical {
+      color: var(--critical);
+    }
+
+    .severity-high {
+      color: #E67E22;
+    }
+
+    .severity-medium {
+      color: var(--yellow);
+    }
+
+    .severity-low {
+      color: var(--green);
+    }
+  </style>
 </head>
+
 <body>
-<div class="shell">
-  <header>
-    <div class="logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </svg>
-    </div>
-    <div>
-      <div class="header-title">NEXUS-SOC</div>
-      <div class="header-sub">AI Security Operations Center</div>
-    </div>
-    <div class="header-right">
-      <div class="threat-level"><span class="dot"></span> SYSTEM NOMINAL</div>
-      <div style="font-size:11px;color:var(--t3);">6 agents · Llama 3.3 70B · AWS</div>
-    </div>
-  </header>
-
-  <div class="main">
-    <aside class="sidebar">
-      <div class="s-section">
-        <div class="s-label">Agent Pipeline</div>
-        <div class="agent-card" id="card-guard">
-          <div class="a-icon" style="background:rgba(163,45,45,0.2);color:#E57373;">G</div>
-          <div><div class="a-name">Guard Agent</div><div class="a-role">Input validation & injection defense</div></div>
-          <span class="a-badge" id="badge-guard">idle</span>
-        </div>
-        <div class="agent-card" id="card-ingestion">
-          <div class="a-icon" style="background:rgba(52,152,219,0.2);color:#5DADE2;">I</div>
-          <div><div class="a-name">Ingestion Agent</div><div class="a-role">Alert parsing & classification</div></div>
-          <span class="a-badge" id="badge-ingestion">idle</span>
-        </div>
-        <div class="agent-card" id="card-threat_intel">
-          <div class="a-icon" style="background:rgba(231,76,60,0.2);color:#EC7063;">T</div>
-          <div><div class="a-name">Threat Intel Agent</div><div class="a-role">Deep threat analysis & scoring</div></div>
-          <span class="a-badge" id="badge-threat_intel">idle</span>
-        </div>
-        <div class="agent-card" id="card-remediation">
-          <div class="a-icon" style="background:rgba(243,156,18,0.2);color:#F5CBA7;">R</div>
-          <div><div class="a-name">Remediation Agent</div><div class="a-role">Action plan generation</div></div>
-          <span class="a-badge" id="badge-remediation">idle</span>
-        </div>
-        <div class="agent-card" id="card-review">
-          <div class="a-icon" style="background:rgba(46,204,113,0.15);color:#58D68D;">V</div>
-          <div><div class="a-name">Review Agent</div><div class="a-role">Plan approval & retry gate</div></div>
-          <span class="a-badge" id="badge-review">idle</span>
-        </div>
-        <div class="agent-card" id="card-reporter">
-          <div class="a-icon" style="background:rgba(155,89,182,0.2);color:#C39BD3;">W</div>
-          <div><div class="a-name">Reporter Agent</div><div class="a-role">Incident report generation</div></div>
-          <span class="a-badge" id="badge-reporter">idle</span>
-        </div>
+  <div class="shell">
+    <header>
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        </svg>
       </div>
-
-      <div class="s-section" style="border-top:0.5px solid var(--border);padding-top:20px;">
-        <div class="s-label">Session Metrics</div>
-        <div style="display:flex;flex-direction:column;gap:7px;">
-          <div style="display:flex;justify-content:space-between;font-size:12px;">
-            <span style="color:var(--t3)">Incidents analyzed</span>
-            <span id="st-queries" style="font-weight:500;font-family:'DM Mono',monospace;color:var(--t1)">0</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;">
-            <span style="color:var(--t3)">Agent invocations</span>
-            <span id="st-agents" style="font-weight:500;font-family:'DM Mono',monospace;color:var(--t1)">0</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;">
-            <span style="color:var(--t3)">Inputs blocked</span>
-            <span id="st-blocked" style="font-weight:500;font-family:'DM Mono',monospace;color:#E57373">0</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;">
-            <span style="color:var(--t3)">Plan retries</span>
-            <span id="st-retries" style="font-weight:500;font-family:'DM Mono',monospace;color:var(--yellow)">0</span>
-          </div>
-        </div>
+      <div>
+        <div class="header-title">NEXUS-SOC</div>
+        <div class="header-sub">AI Security Operations Center</div>
       </div>
-
-      <div class="s-section" style="padding-top:16px;">
-        <div class="s-label">Last Incident</div>
-        <div class="meta-grid">
-          <div class="meta-card">
-            <div class="meta-val" id="meta-id">—</div>
-            <div class="meta-key">Alert ID</div>
-          </div>
-          <div class="meta-card">
-            <div class="meta-val" id="meta-severity">—</div>
-            <div class="meta-key">Severity</div>
-          </div>
-          <div class="meta-card">
-            <div class="meta-val" id="meta-score">—</div>
-            <div class="meta-key">Threat Score</div>
-          </div>
-          <div class="meta-card">
-            <div class="meta-val" id="meta-approved">—</div>
-            <div class="meta-key">Plan Status</div>
-          </div>
-        </div>
+      <div class="header-right">
+        <div class="threat-level"><span class="dot"></span> SYSTEM NOMINAL</div>
+        <div style="font-size:11px;color:var(--t3);">6 agents · Llama 3.3 70B · AWS</div>
       </div>
-    </aside>
+    </header>
 
-    <div class="content">
-      <div class="tabs">
-        <div class="tab active" data-tab="run">🔴 Triage Alert</div>
-        <div class="tab" data-tab="pipeline">⚙ Agent Trace</div>
-        <div class="tab" data-tab="report">📋 Incident Report</div>
-        <div class="tab" data-tab="arch">🏛 Architecture</div>
-      </div>
-
-      <div class="tab-body">
-
-        <!-- TRIAGE TAB -->
-        <div class="tab-pane active" id="pane-run">
-          <div class="sec-banner" id="sec-banner">
-            🛡 <span id="sec-text">Input blocked by Guard Agent.</span>
-          </div>
-          <div class="alert-box">
-            <div class="alert-label">
-              Incoming Security Alert
-              <span>PASTE LOG / ALERT TEXT</span>
-            </div>
-            <div class="q-wrap">
-              <textarea id="user-query" placeholder="Paste a security alert, log entry, or describe an incident...&#10;&#10;e.g. Failed SSH login attempts: 847 attempts in 3 minutes from IP 185.220.101.47 targeting root account on prod-server-01. Geolocation: Russia. Current time: 02:34 UTC." rows="5"></textarea>
-              <button class="run-btn" id="run-btn" onclick="runPipeline()">
-                ▶ TRIAGE
-              </button>
-            </div>
-            <div class="scenarios">
-              <div class="sc-label">Load sample scenario:</div>
-              <div class="sc-chips">
-                <span class="chip" onclick="setQ('ALERT: 847 failed SSH login attempts in 3 minutes from IP 185.220.101.47 targeting root account on prod-server-01. Geolocation: Eastern Europe. Timestamp: 02:34 UTC.')">🔐 Brute Force</span>
-                <span class="chip" onclick="setQ('ALERT: Unusual outbound traffic detected. Server db-prod-02 is sending 2.3GB of data to external IP 91.108.4.18 on port 443. Data transfer started at 03:12 UTC. No scheduled jobs active.')">📤 Data Exfiltration</span>
-                <span class="chip" onclick="setQ('ALERT: Endpoint detection system flagged process svchost32.exe on workstation WKSTN-0042. File hash matches known Emotet malware signature. Process attempting to modify registry keys and contact C2 server at 194.165.16.72.')">🦠 Malware Detected</span>
-                <span class="chip" onclick="setQ('ALERT: DDoS attack in progress. Web servers experiencing 50,000 requests/second from distributed IPs across 40 countries. CDN rate limiting triggered. Origin servers CPU at 98%. Started 14:22 UTC.')">💥 DDoS Attack</span>
-              </div>
-            </div>
-          </div>
-
-          <div id="idle-state" class="empty-state">
-            <div class="empty-icon">🛡</div>
-            <div class="empty-title">SOC System Standing By</div>
-            <div class="empty-sub">Paste a security alert above and hit TRIAGE to activate all 6 agents</div>
-          </div>
-
-          <div id="run-view" style="display:none;">
-            <div class="progress-wrap">
-              <div class="progress-top">
-                <div class="progress-bar-bg"><div class="progress-bar" id="pbar"></div></div>
-                <span class="progress-label" id="plabel">0 / 6</span>
-              </div>
-            </div>
-            <div class="live-label" id="live-label"></div>
-            <div class="live-out" id="live-out"></div>
-          </div>
-        </div>
-
-        <!-- AGENT TRACE TAB -->
-        <div class="tab-pane" id="pane-pipeline">
-          <div id="pipe-empty" class="empty-state">
-            <div class="empty-icon">⚙</div>
-            <div class="empty-title">No incident triaged yet</div>
-            <div class="empty-sub">Run a triage to see the full agent-by-agent execution trace including any retry loops</div>
-          </div>
-          <div id="pipe-steps" style="display:none;"></div>
-        </div>
-
-        <!-- INCIDENT REPORT TAB -->
-        <div class="tab-pane" id="pane-report">
-          <div class="report-box">
-            <div class="report-topbar">
-              <span class="report-topbar-title">
-                📋 Incident Report
-                <span id="report-alert-id" style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;"></span>
-              </span>
-              <button class="copy-btn" onclick="copyReport()">Copy Report</button>
-            </div>
-            <div class="report-body" id="report-out">
-              <span class="placeholder">Incident report will appear here after triage completes.</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- ARCHITECTURE TAB -->
-        <div class="tab-pane" id="pane-arch">
-          <div class="arch-box">
-            <div class="sec-title">System Architecture — NEXUS-SOC</div>
-            <div class="arch-flow">
-              <div class="arch-node">
-                <div class="arch-node-icon" style="background:rgba(255,255,255,0.05);">👤</div>
-                <div class="arch-node-name">SOC Analyst</div>
-                <div class="arch-node-role">Alert input</div>
-              </div>
-              <span class="arch-arrow">→</span>
-              <div class="arch-node" style="border-color:rgba(163,45,45,0.4);">
-                <div class="arch-node-icon" style="background:rgba(163,45,45,0.2);">🛡</div>
-                <div class="arch-node-name">Guard Agent</div>
-                <div class="arch-node-role">Validates input</div>
-              </div>
-              <span class="arch-arrow">→</span>
-              <div class="arch-node" style="border-color:rgba(52,152,219,0.3);">
-                <div class="arch-node-icon" style="background:rgba(52,152,219,0.15);">📥</div>
-                <div class="arch-node-name">Ingestion Agent</div>
-                <div class="arch-node-role">Parses alert</div>
-              </div>
-              <span class="arch-arrow">→</span>
-              <div class="arch-node" style="border-color:rgba(231,76,60,0.3);">
-                <div class="arch-node-icon" style="background:rgba(231,76,60,0.15);">🔍</div>
-                <div class="arch-node-name">Threat Intel</div>
-                <div class="arch-node-role">Scores threat</div>
-              </div>
-              <span class="arch-arrow">→</span>
-              <div class="arch-node" style="border-color:rgba(243,156,18,0.3);">
-                <div class="arch-node-icon" style="background:rgba(243,156,18,0.15);">⚡</div>
-                <div class="arch-node-name">Remediation</div>
-                <div class="arch-node-role">Action plan</div>
-              </div>
-              <span class="arch-arrow">→</span>
-              <div class="arch-node" style="border-color:rgba(46,204,113,0.3);">
-                <div class="arch-node-icon" style="background:rgba(46,204,113,0.1);">✅</div>
-                <div class="arch-node-name">Review Agent</div>
-                <div class="arch-node-role">Approves / rejects</div>
-              </div>
-              <span class="arch-arrow">→</span>
-              <div class="arch-node" style="border-color:rgba(155,89,182,0.3);">
-                <div class="arch-node-icon" style="background:rgba(155,89,182,0.15);">📋</div>
-                <div class="arch-node-name">Reporter</div>
-                <div class="arch-node-role">Incident brief</div>
-              </div>
-            </div>
-
-            <div class="arch-retry" style="margin-bottom:20px;">
-              ↩ <strong>Retry Loop:</strong> If Review Agent rejects the remediation plan, it sends specific revision instructions back to the Remediation Agent. This repeats up to 2 times before the Reporter proceeds with the best available plan. This is genuine agent negotiation.
-            </div>
-
-            <div style="margin-bottom:20px;">
-              <div class="sec-title">Communication Pattern</div>
-              <div style="font-size:13px;color:var(--t2);line-height:1.7;background:var(--surface-3);border-radius:8px;padding:14px 16px;font-family:'DM Mono',monospace;font-size:12px;">
-                Agents operate in a <strong style="color:var(--t1)">sequential + cyclical hybrid</strong> pipeline. The Remediation ↔ Review loop implements genuine agent negotiation — the Review Agent can reject and provide structured feedback, forcing the Remediation Agent to revise. All inter-agent messages are structured JSON passed through the FastAPI orchestration layer.
-              </div>
-            </div>
-
-            <div style="margin-bottom:20px;">
-              <div class="sec-title">Security Guardrails</div>
-              <div class="guardrail-grid">
-                <div class="guardrail-item">
-                  <div class="g-icon">🔒</div>
-                  <div><div class="g-title">Prompt Injection Defense</div><div class="g-desc">Guard Agent classifies every input before it enters the pipeline. Jailbreaks and injections are blocked at the gate.</div></div>
-                </div>
-                <div class="guardrail-item">
-                  <div class="g-icon">🎭</div>
-                  <div><div class="g-title">Role Constraint Enforcement</div><div class="g-desc">Each agent has a scoped system prompt defining strict boundaries. No agent can invoke another directly.</div></div>
-                </div>
-                <div class="guardrail-item">
-                  <div class="g-icon">🔁</div>
-                  <div><div class="g-title">Retry & Failure Handling</div><div class="g-desc">Review Agent can reject inadequate plans up to 2 times. All retries are logged and visible in the Agent Trace.</div></div>
-                </div>
-                <div class="guardrail-item">
-                  <div class="g-icon">📋</div>
-                  <div><div class="g-title">Full Audit Trail</div><div class="g-desc">Every agent invocation — including retries — is logged with raw input/output. Visible in the Agent Trace tab.</div></div>
-                </div>
-              </div>
-            </div>
-
+    <div class="main">
+      <aside class="sidebar">
+        <div class="s-section">
+          <div class="s-label">Agent Pipeline</div>
+          <div class="agent-card" id="card-guard">
+            <div class="a-icon" style="background:rgba(163,45,45,0.2);color:#E57373;">G</div>
             <div>
-              <div class="sec-title">Tech Stack</div>
-              <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                <span class="tag" style="background:rgba(163,45,45,0.2);color:#E57373;">Llama 3.3 70B</span>
-                <span class="tag" style="background:var(--surface-3);color:var(--t2);">Groq API</span>
-                <span class="tag" style="background:var(--surface-3);color:var(--t2);">FastAPI + Python</span>
-                <span class="tag" style="background:var(--surface-3);color:var(--t2);">AWS Elastic Beanstalk</span>
-                <span class="tag" style="background:var(--surface-3);color:var(--t2);">Sequential + Cyclical Pipeline</span>
-                <span class="tag" style="background:rgba(243,156,18,0.15);color:var(--yellow);">Agent Negotiation Loop</span>
-              </div>
+              <div class="a-name">Guard Agent</div>
+              <div class="a-role">Input validation & injection defense</div>
+            </div>
+            <span class="a-badge" id="badge-guard">idle</span>
+          </div>
+          <div class="agent-card" id="card-ingestion">
+            <div class="a-icon" style="background:rgba(52,152,219,0.2);color:#5DADE2;">I</div>
+            <div>
+              <div class="a-name">Ingestion Agent</div>
+              <div class="a-role">Alert parsing & classification</div>
+            </div>
+            <span class="a-badge" id="badge-ingestion">idle</span>
+          </div>
+          <div class="agent-card" id="card-threat_intel">
+            <div class="a-icon" style="background:rgba(231,76,60,0.2);color:#EC7063;">T</div>
+            <div>
+              <div class="a-name">Threat Intel Agent</div>
+              <div class="a-role">Deep threat analysis & scoring</div>
+            </div>
+            <span class="a-badge" id="badge-threat_intel">idle</span>
+          </div>
+          <div class="agent-card" id="card-remediation">
+            <div class="a-icon" style="background:rgba(243,156,18,0.2);color:#F5CBA7;">R</div>
+            <div>
+              <div class="a-name">Remediation Agent</div>
+              <div class="a-role">Action plan generation</div>
+            </div>
+            <span class="a-badge" id="badge-remediation">idle</span>
+          </div>
+          <div class="agent-card" id="card-review">
+            <div class="a-icon" style="background:rgba(46,204,113,0.15);color:#58D68D;">V</div>
+            <div>
+              <div class="a-name">Review Agent</div>
+              <div class="a-role">Plan approval & retry gate</div>
+            </div>
+            <span class="a-badge" id="badge-review">idle</span>
+          </div>
+          <div class="agent-card" id="card-reporter">
+            <div class="a-icon" style="background:rgba(155,89,182,0.2);color:#C39BD3;">W</div>
+            <div>
+              <div class="a-name">Reporter Agent</div>
+              <div class="a-role">Incident report generation</div>
+            </div>
+            <span class="a-badge" id="badge-reporter">idle</span>
+          </div>
+        </div>
+
+        <div class="s-section" style="border-top:0.5px solid var(--border);padding-top:20px;">
+          <div class="s-label">Session Metrics</div>
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--t3)">Incidents analyzed</span>
+              <span id="st-queries" style="font-weight:500;font-family:'DM Mono',monospace;color:var(--t1)">0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--t3)">Agent invocations</span>
+              <span id="st-agents" style="font-weight:500;font-family:'DM Mono',monospace;color:var(--t1)">0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--t3)">Inputs blocked</span>
+              <span id="st-blocked" style="font-weight:500;font-family:'DM Mono',monospace;color:#E57373">0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--t3)">Plan retries</span>
+              <span id="st-retries" style="font-weight:500;font-family:'DM Mono',monospace;color:var(--yellow)">0</span>
             </div>
           </div>
         </div>
 
+        <div class="s-section" style="padding-top:16px;">
+          <div class="s-label">Last Incident</div>
+          <div class="meta-grid">
+            <div class="meta-card">
+              <div class="meta-val" id="meta-id">—</div>
+              <div class="meta-key">Alert ID</div>
+            </div>
+            <div class="meta-card">
+              <div class="meta-val" id="meta-severity">—</div>
+              <div class="meta-key">Severity</div>
+            </div>
+            <div class="meta-card">
+              <div class="meta-val" id="meta-score">—</div>
+              <div class="meta-key">Threat Score</div>
+            </div>
+            <div class="meta-card">
+              <div class="meta-val" id="meta-approved">—</div>
+              <div class="meta-key">Plan Status</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="content">
+        <div class="tabs">
+          <div class="tab active" data-tab="run"> Triage Alert</div>
+          <div class="tab" data-tab="pipeline"> Agent Trace</div>
+          <div class="tab" data-tab="report"> Incident Report</div>
+          <div class="tab" data-tab="arch"> Architecture</div>
+        </div>
+
+        <div class="tab-body">
+
+          <!-- TRIAGE TAB -->
+          <div class="tab-pane active" id="pane-run">
+            <div class="sec-banner" id="sec-banner">
+              <span id="sec-text">Input blocked by Guard Agent.</span>
+            </div>
+            <div class="alert-box">
+              <div class="alert-label">
+                Incoming Security Alert
+                <span>PASTE LOG / ALERT TEXT</span>
+              </div>
+              <div class="q-wrap">
+                <textarea id="user-query"
+                  placeholder="Paste a security alert, log entry, or describe an incident...&#10;&#10;e.g. Failed SSH login attempts: 847 attempts in 3 minutes from IP 185.220.101.47 targeting root account on prod-server-01. Geolocation: Russia. Current time: 02:34 UTC."
+                  rows="5"></textarea>
+                <button class="run-btn" id="run-btn" onclick="runPipeline()">
+                  TRIAGE
+                </button>
+              </div>
+              <div class="scenarios">
+                <div class="sc-label">Load sample scenario:</div>
+                <div class="sc-chips">
+                  <span class="chip"
+                    onclick="setQ('ALERT: 847 failed SSH login attempts in 3 minutes from IP 185.220.101.47 targeting root account on prod-server-01. Geolocation: Eastern Europe. Timestamp: 02:34 UTC.')">🔐
+                    Brute Force</span>
+                  <span class="chip"
+                    onclick="setQ('ALERT: Unusual outbound traffic detected. Server db-prod-02 is sending 2.3GB of data to external IP 91.108.4.18 on port 443. Data transfer started at 03:12 UTC. No scheduled jobs active.')">📤
+                    Data Exfiltration</span>
+                  <span class="chip"
+                    onclick="setQ('ALERT: Endpoint detection system flagged process svchost32.exe on workstation WKSTN-0042. File hash matches known Emotet malware signature. Process attempting to modify registry keys and contact C2 server at 194.165.16.72.')">🦠
+                    Malware Detected</span>
+                  <span class="chip"
+                    onclick="setQ('ALERT: DDoS attack in progress. Web servers experiencing 50,000 requests/second from distributed IPs across 40 countries. CDN rate limiting triggered. Origin servers CPU at 98%. Started 14:22 UTC.')">💥
+                    DDoS Attack</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="idle-state" class="empty-state">
+              <div class="empty-icon">🛡</div>
+              <div class="empty-title">SOC System Standing By</div>
+              <div class="empty-sub">Paste a security alert above and hit TRIAGE to activate all 6 agents</div>
+            </div>
+
+            <div id="run-view" style="display:none;">
+              <div class="progress-wrap">
+                <div class="progress-top">
+                  <div class="progress-bar-bg">
+                    <div class="progress-bar" id="pbar"></div>
+                  </div>
+                  <span class="progress-label" id="plabel">0 / 6</span>
+                </div>
+              </div>
+              <div class="live-label" id="live-label"></div>
+              <div class="live-out" id="live-out"></div>
+            </div>
+          </div>
+
+          <!-- AGENT TRACE TAB -->
+          <div class="tab-pane" id="pane-pipeline">
+            <div id="pipe-empty" class="empty-state">
+              <div class="empty-icon">⚙</div>
+              <div class="empty-title">No incident triaged yet</div>
+              <div class="empty-sub">Run a triage to see the full agent-by-agent execution trace including any retry
+                loops</div>
+            </div>
+            <div id="pipe-steps" style="display:none;"></div>
+          </div>
+
+          <!-- INCIDENT REPORT TAB -->
+          <div class="tab-pane" id="pane-report">
+            <div class="report-box">
+              <div class="report-topbar">
+                <span class="report-topbar-title">
+                  Incident Report
+                  <span id="report-alert-id"
+                    style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;"></span>
+                </span>
+                <button class="copy-btn" onclick="copyReport()">Copy Report</button>
+              </div>
+              <div id="report-viz" style="display:none;padding:20px 24px;border-bottom:0.5px solid var(--border);">
+                <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+                  <div
+                    style="flex:1;min-width:120px;background:var(--surface-3);border-radius:10px;padding:14px 16px;border:0.5px solid var(--border);">
+                    <div
+                      style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">
+                      Threat Score</div>
+                    <div
+                      style="position:relative;height:6px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;margin-bottom:6px;">
+                      <div id="viz-threat-bar" style="height:100%;border-radius:4px;transition:width 1s ease;width:0%;">
+                      </div>
+                    </div>
+                    <div id="viz-threat-score"
+                      style="font-size:22px;font-weight:500;font-family:'DM Mono',monospace;color:var(--t1);">—</div>
+                  </div>
+                  <div
+                    style="flex:1;min-width:120px;background:var(--surface-3);border-radius:10px;padding:14px 16px;border:0.5px solid var(--border);">
+                    <div
+                      style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">
+                      Severity</div>
+                    <div id="viz-severity" style="font-size:22px;font-weight:500;font-family:'DM Mono',monospace;">—
+                    </div>
+                  </div>
+                  <div
+                    style="flex:1;min-width:120px;background:var(--surface-3);border-radius:10px;padding:14px 16px;border:0.5px solid var(--border);">
+                    <div
+                      style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">
+                      Plan Quality</div>
+                    <div id="viz-quality"
+                      style="font-size:22px;font-weight:500;font-family:'DM Mono',monospace;color:var(--t1);">—</div>
+                  </div>
+                  <div
+                    style="flex:1;min-width:120px;background:var(--surface-3);border-radius:10px;padding:14px 16px;border:0.5px solid var(--border);">
+                    <div
+                      style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">
+                      Retry Cycles</div>
+                    <div id="viz-retries"
+                      style="font-size:22px;font-weight:500;font-family:'DM Mono',monospace;color:var(--yellow);">—
+                    </div>
+                  </div>
+                  <div
+                    style="flex:1;min-width:120px;background:var(--surface-3);border-radius:10px;padding:14px 16px;border:0.5px solid var(--border);">
+                    <div
+                      style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">
+                      Plan Status</div>
+                    <div id="viz-approved" style="font-size:22px;font-weight:500;font-family:'DM Mono',monospace;">—
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style="background:var(--surface-3);border-radius:10px;padding:14px 16px;border:0.5px solid var(--border);">
+                  <div
+                    style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">
+                    Agent Pipeline Timeline</div>
+                  <div id="viz-timeline" style="display:flex;align-items:center;gap:0;flex-wrap:wrap;"></div>
+                </div>
+              </div>
+              <div class="report-body" id="report-out">
+                <span class="placeholder">Incident report will appear here after triage completes.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ARCHITECTURE TAB -->
+          <div class="tab-pane" id="pane-arch">
+            <div class="arch-box">
+              <div class="sec-title">System Architecture — NEXUS-SOC</div>
+              <div class="arch-flow">
+                <div class="arch-node">
+                  <div class="arch-node-icon" style="background:rgba(255,255,255,0.05);">👤</div>
+                  <div class="arch-node-name">SOC Analyst</div>
+                  <div class="arch-node-role">Alert input</div>
+                </div>
+                <span class="arch-arrow">→</span>
+                <div class="arch-node" style="border-color:rgba(163,45,45,0.4);">
+                  <div class="arch-node-icon" style="background:rgba(163,45,45,0.2);">🛡</div>
+                  <div class="arch-node-name">Guard Agent</div>
+                  <div class="arch-node-role">Validates input</div>
+                </div>
+                <span class="arch-arrow">→</span>
+                <div class="arch-node" style="border-color:rgba(52,152,219,0.3);">
+                  <div class="arch-node-icon" style="background:rgba(52,152,219,0.15);">📥</div>
+                  <div class="arch-node-name">Ingestion Agent</div>
+                  <div class="arch-node-role">Parses alert</div>
+                </div>
+                <span class="arch-arrow">→</span>
+                <div class="arch-node" style="border-color:rgba(231,76,60,0.3);">
+                  <div class="arch-node-icon" style="background:rgba(231,76,60,0.15);">🔍</div>
+                  <div class="arch-node-name">Threat Intel</div>
+                  <div class="arch-node-role">Scores threat</div>
+                </div>
+                <span class="arch-arrow">→</span>
+                <div class="arch-node" style="border-color:rgba(243,156,18,0.3);">
+                  <div class="arch-node-icon" style="background:rgba(243,156,18,0.15);">⚡</div>
+                  <div class="arch-node-name">Remediation</div>
+                  <div class="arch-node-role">Action plan</div>
+                </div>
+                <span class="arch-arrow">→</span>
+                <div class="arch-node" style="border-color:rgba(46,204,113,0.3);">
+                  <div class="arch-node-icon" style="background:rgba(46,204,113,0.1);">✅</div>
+                  <div class="arch-node-name">Review Agent</div>
+                  <div class="arch-node-role">Approves / rejects</div>
+                </div>
+                <span class="arch-arrow">→</span>
+                <div class="arch-node" style="border-color:rgba(155,89,182,0.3);">
+                  <div class="arch-node-icon" style="background:rgba(155,89,182,0.15);">📋</div>
+                  <div class="arch-node-name">Reporter</div>
+                  <div class="arch-node-role">Incident brief</div>
+                </div>
+              </div>
+
+              <div class="arch-retry" style="margin-bottom:20px;">
+                ↩ <strong>Retry Loop:</strong> If Review Agent rejects the remediation plan, it sends specific revision
+                instructions back to the Remediation Agent. This repeats up to 2 times before the Reporter proceeds with
+                the best available plan. This is genuine agent negotiation.
+              </div>
+
+              <div style="margin-bottom:20px;">
+                <div class="sec-title">Communication Pattern</div>
+                <div
+                  style="font-size:13px;color:var(--t2);line-height:1.7;background:var(--surface-3);border-radius:8px;padding:14px 16px;font-family:'DM Mono',monospace;font-size:12px;">
+                  Agents operate in a <strong style="color:var(--t1)">sequential + cyclical hybrid</strong> pipeline.
+                  The Remediation ↔ Review loop implements genuine agent negotiation — the Review Agent can reject and
+                  provide structured feedback, forcing the Remediation Agent to revise. All inter-agent messages are
+                  structured JSON passed through the FastAPI orchestration layer.
+                </div>
+              </div>
+
+              <div style="margin-bottom:20px;">
+                <div class="sec-title">Security Guardrails</div>
+                <div class="guardrail-grid">
+                  <div class="guardrail-item">
+                    <div class="g-icon">🔒</div>
+                    <div>
+                      <div class="g-title">Prompt Injection Defense</div>
+                      <div class="g-desc">Guard Agent classifies every input before it enters the pipeline. Jailbreaks
+                        and injections are blocked at the gate.</div>
+                    </div>
+                  </div>
+                  <div class="guardrail-item">
+                    <div class="g-icon">🎭</div>
+                    <div>
+                      <div class="g-title">Role Constraint Enforcement</div>
+                      <div class="g-desc">Each agent has a scoped system prompt defining strict boundaries. No agent can
+                        invoke another directly.</div>
+                    </div>
+                  </div>
+                  <div class="guardrail-item">
+                    <div class="g-icon">🔁</div>
+                    <div>
+                      <div class="g-title">Retry & Failure Handling</div>
+                      <div class="g-desc">Review Agent can reject inadequate plans up to 2 times. All retries are logged
+                        and visible in the Agent Trace.</div>
+                    </div>
+                  </div>
+                  <div class="guardrail-item">
+                    <div class="g-icon">📋</div>
+                    <div>
+                      <div class="g-title">Full Audit Trail</div>
+                      <div class="g-desc">Every agent invocation — including retries — is logged with raw input/output.
+                        Visible in the Agent Trace tab.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="sec-title">Tech Stack</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                  <span class="tag" style="background:rgba(163,45,45,0.2);color:#E57373;">Llama 3.3 70B</span>
+                  <span class="tag" style="background:var(--surface-3);color:var(--t2);">Groq API</span>
+                  <span class="tag" style="background:var(--surface-3);color:var(--t2);">FastAPI + Python</span>
+                  <span class="tag" style="background:var(--surface-3);color:var(--t2);">AWS Elastic Beanstalk</span>
+                  <span class="tag" style="background:var(--surface-3);color:var(--t2);">Sequential + Cyclical
+                    Pipeline</span>
+                  <span class="tag" style="background:rgba(243,156,18,0.15);color:var(--yellow);">Agent Negotiation
+                    Loop</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<script>
-const AGENT_COLORS = {
-  guard:'#E57373', ingestion:'#5DADE2', threat_intel:'#EC7063',
-  remediation:'#F5CBA7', review:'#58D68D', reporter:'#C39BD3'
-};
-const AGENT_NAMES = {
-  guard:'Guard Agent', ingestion:'Ingestion Agent', threat_intel:'Threat Intel Agent',
-  remediation:'Remediation Agent', review:'Review Agent', reporter:'Reporter Agent'
-};
+  <script>
+    const AGENT_COLORS = {
+      guard: '#E57373', ingestion: '#5DADE2', threat_intel: '#EC7063',
+      remediation: '#F5CBA7', review: '#58D68D', reporter: '#C39BD3'
+    };
+    const AGENT_NAMES = {
+      guard: 'Guard Agent', ingestion: 'Ingestion Agent', threat_intel: 'Threat Intel Agent',
+      remediation: 'Remediation Agent', review: 'Review Agent', reporter: 'Reporter Agent'
+    };
 
-let queries=0, agentCalls=0, blocked=0, totalRetries=0, currentReport='';
+    let queries = 0, agentCalls = 0, blocked = 0, totalRetries = 0, currentReport = '';
 
-function setQ(q){ document.getElementById('user-query').value = q; }
+    function setQ(q) { document.getElementById('user-query').value = q; }
 
-document.querySelectorAll('.tab').forEach(t => {
-  t.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    document.querySelectorAll('.tab-pane').forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById('pane-' + t.dataset.tab).classList.add('active');
-  });
-});
+    document.querySelectorAll('.tab').forEach(t => {
+      t.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        document.getElementById('pane-' + t.dataset.tab).classList.add('active');
+      });
+    });
 
-function setAgent(key, status) {
-  const badge = document.getElementById('badge-' + key);
-  const card = document.getElementById('card-' + key);
-  if (!badge) return;
-  const cfg = {
-    idle: { bg:'rgba(255,255,255,0.05)', txt:'#5C5C7A', label:'idle' },
-    running: { bg:'rgba(163,45,45,0.2)', txt:'#E57373', label:'active' },
-    done: { bg:'rgba(46,204,113,0.15)', txt:'#58D68D', label:'done' },
-    retry: { bg:'rgba(243,156,18,0.15)', txt:'#F39C12', label:'retry' },
-    error: { bg:'rgba(163,45,45,0.2)', txt:'#E57373', label:'error' }
-  };
-  const c = cfg[status] || cfg.idle;
-  badge.style.background = c.bg;
-  badge.style.color = c.txt;
-  badge.textContent = c.label;
-  card.classList.remove('active','approved');
-  if (status === 'running') card.classList.add('active');
-  if (status === 'done') card.classList.add('approved');
-}
+    function setAgent(key, status) {
+      const badge = document.getElementById('badge-' + key);
+      const card = document.getElementById('card-' + key);
+      if (!badge) return;
+      const cfg = {
+        idle: { bg: 'rgba(255,255,255,0.05)', txt: '#5C5C7A', label: 'idle' },
+        running: { bg: 'rgba(163,45,45,0.2)', txt: '#E57373', label: 'active' },
+        done: { bg: 'rgba(46,204,113,0.15)', txt: '#58D68D', label: 'done' },
+        retry: { bg: 'rgba(243,156,18,0.15)', txt: '#F39C12', label: 'retry' },
+        error: { bg: 'rgba(163,45,45,0.2)', txt: '#E57373', label: 'error' }
+      };
+      const c = cfg[status] || cfg.idle;
+      badge.style.background = c.bg;
+      badge.style.color = c.txt;
+      badge.textContent = c.label;
+      card.classList.remove('active', 'approved');
+      if (status === 'running') card.classList.add('active');
+      if (status === 'done') card.classList.add('approved');
+    }
 
-function resetAgents() {
-  ['guard','ingestion','threat_intel','remediation','review','reporter'].forEach(k => setAgent(k,'idle'));
-}
+    function resetAgents() {
+      ['guard', 'ingestion', 'threat_intel', 'remediation', 'review', 'reporter'].forEach(k => setAgent(k, 'idle'));
+    }
 
-function addStep(key, label, content, status, isRetry) {
-  const wrap = document.getElementById('pipe-steps');
-  if (isRetry) {
-    const banner = document.createElement('div');
-    banner.className = 'retry-banner';
-    banner.innerHTML = '↩ Review Agent rejected plan — Remediation Agent revising (Retry ' + isRetry + ')';
-    wrap.appendChild(banner);
-  }
-  const el = document.createElement('div');
-  el.className = 'pipeline-step ' + (isRetry ? 'retry' : status);
-  const color = AGENT_COLORS[key] || '#888';
-  const badgeCfg = {
-    done: 'background:rgba(46,204,113,0.15);color:#58D68D',
-    error: 'background:rgba(163,45,45,0.2);color:#E57373',
-    retry: 'background:rgba(243,156,18,0.15);color:#F39C12'
-  };
-  const badgeStyle = badgeCfg[isRetry ? 'retry' : status] || '';
-  el.innerHTML = `
+    function addStep(key, label, content, status, isRetry) {
+      const wrap = document.getElementById('pipe-steps');
+      if (isRetry) {
+        const banner = document.createElement('div');
+        banner.className = 'retry-banner';
+        banner.innerHTML = '↩ Review Agent rejected plan — Remediation Agent revising (Retry ' + isRetry + ')';
+        wrap.appendChild(banner);
+      }
+      const el = document.createElement('div');
+      el.className = 'pipeline-step ' + (isRetry ? 'retry' : status);
+      const color = AGENT_COLORS[key] || '#888';
+      const badgeCfg = {
+        done: 'background:rgba(46,204,113,0.15);color:#58D68D',
+        error: 'background:rgba(163,45,45,0.2);color:#E57373',
+        retry: 'background:rgba(243,156,18,0.15);color:#F39C12'
+      };
+      const badgeStyle = badgeCfg[isRetry ? 'retry' : status] || '';
+      el.innerHTML = `
     <div class="step-hdr" onclick="this.nextElementSibling.classList.toggle('open')">
       <div class="step-dot" style="background:${color}"></div>
       <span class="step-name">${label}</span>
@@ -517,131 +1286,210 @@ function addStep(key, label, content, status, isRetry) {
     </div>
     <div class="step-body open">${content}</div>
   `;
-  wrap.appendChild(el);
-}
-
-function getDesc(key) {
-  return {
-    guard:'input validation', ingestion:'alert parsing',
-    threat_intel:'threat analysis', remediation:'action planning',
-    review:'plan approval', reporter:'report generation'
-  }[key] || key;
-}
-
-function updateProgress(step, total, label) {
-  document.getElementById('pbar').style.width = Math.round((step/total)*100)+'%';
-  document.getElementById('plabel').textContent = step + ' / ' + total;
-  document.getElementById('live-label').textContent = '→ ' + label;
-}
-
-async function runPipeline() {
-  const query = document.getElementById('user-query').value.trim();
-  if (!query) return;
-  const btn = document.getElementById('run-btn');
-  btn.disabled = true;
-  resetAgents();
-  queries++;
-  document.getElementById('st-queries').textContent = queries;
-  document.getElementById('idle-state').style.display = 'none';
-  document.getElementById('run-view').style.display = 'block';
-  document.getElementById('sec-banner').classList.remove('show');
-  document.getElementById('pipe-steps').innerHTML = '';
-  document.getElementById('pipe-empty').style.display = 'none';
-  document.getElementById('pipe-steps').style.display = 'block';
-  document.getElementById('report-out').innerHTML = '<span class="placeholder">Generating incident report…</span>';
-  document.getElementById('report-alert-id').textContent = '';
-  document.getElementById('live-label').style.color = '#E57373';
-
-  const liveOut = document.getElementById('live-out');
-  updateProgress(0, 6, 'Guard Agent — validating alert input...');
-  liveOut.textContent = 'Initializing SOC pipeline...\nActivating Guard Agent...';
-  setAgent('guard', 'running');
-
-  try {
-    const resp = await fetch('/api/run', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query })
-    });
-    const data = await resp.json();
-
-    if (data.detail) {
-      liveOut.textContent = 'Error: ' + data.detail;
-      btn.disabled = false;
-      return;
+      wrap.appendChild(el);
     }
 
-    const pipe = data.pipeline || {};
-    let step = 0;
+    function getDesc(key) {
+      return {
+        guard: 'input validation', ingestion: 'alert parsing',
+        threat_intel: 'threat analysis', remediation: 'action planning',
+        review: 'plan approval', reporter: 'report generation'
+      }[key] || key;
+    }
 
-    for (const [key, info] of Object.entries(pipe)) {
-      step++;
-      agentCalls++;
-      document.getElementById('st-agents').textContent = agentCalls;
+    function updateProgress(step, total, label) {
+      document.getElementById('pbar').style.width = Math.round((step / total) * 100) + '%';
+      document.getElementById('plabel').textContent = step + ' / ' + total;
+      document.getElementById('live-label').textContent = '→ ' + label;
+    }
 
-      const baseKey = key.replace(/_retry_\d+/, '');
-      const isRetry = key.includes('_retry_') ? parseInt(key.split('_retry_')[1]) : null;
+    async function runPipeline() {
+      const query = document.getElementById('user-query').value.trim();
+      if (!query) return;
+      const btn = document.getElementById('run-btn');
+      btn.disabled = true;
+      resetAgents();
+      queries++;
+      document.getElementById('st-queries').textContent = queries;
+      document.getElementById('idle-state').style.display = 'none';
+      document.getElementById('run-view').style.display = 'block';
+      document.getElementById('sec-banner').classList.remove('show');
+      document.getElementById('pipe-steps').innerHTML = '';
+      document.getElementById('pipe-empty').style.display = 'none';
+      document.getElementById('pipe-steps').style.display = 'block';
+      document.getElementById('report-out').innerHTML = '<span class="placeholder">Generating incident report…</span>';
+      document.getElementById('report-alert-id').textContent = '';
+      document.getElementById('live-label').style.color = '#E57373';
 
-      if (isRetry) {
-        setAgent('remediation', 'retry');
-        setAgent('review', 'retry');
-        totalRetries++;
-        document.getElementById('st-retries').textContent = totalRetries;
-      } else {
-        setAgent(baseKey, info.status || 'done');
+      const liveOut = document.getElementById('live-out');
+      updateProgress(0, 6, 'Guard Agent — validating alert input...');
+      liveOut.textContent = 'Initializing SOC pipeline...\nActivating Guard Agent...';
+      setAgent('guard', 'running');
+
+      try {
+        const resp = await fetch('/api/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+        const data = await resp.json();
+
+        if (data.detail) {
+          liveOut.textContent = 'Error: ' + data.detail;
+          btn.disabled = false;
+          return;
+        }
+
+        const pipe = data.pipeline || {};
+        let step = 0;
+
+        for (const [key, info] of Object.entries(pipe)) {
+          step++;
+          agentCalls++;
+          document.getElementById('st-agents').textContent = agentCalls;
+
+          const baseKey = key.replace(/_retry_\d+/, '');
+          const isRetry = key.includes('_retry_') ? parseInt(key.split('_retry_')[1]) : null;
+
+          if (isRetry) {
+            setAgent('remediation', 'retry');
+            setAgent('review', 'retry');
+            totalRetries++;
+            document.getElementById('st-retries').textContent = totalRetries;
+          } else {
+            setAgent(baseKey, info.status || 'done');
+          }
+
+          addStep(baseKey, info.agent || AGENT_NAMES[baseKey] || key, info.output || '', info.status || 'done', isRetry);
+          updateProgress(Math.min(step, 6), 6, (info.agent || key) + ' — complete');
+        }
+
+        if (data.blocked) {
+          blocked++;
+          document.getElementById('st-blocked').textContent = blocked;
+          document.getElementById('sec-text').textContent = 'Alert blocked: ' + data.reason;
+          document.getElementById('sec-banner').classList.add('show');
+          setAgent('guard', 'error');
+          liveOut.textContent = '🛡 BLOCKED by Guard Agent\n\nReason: ' + data.reason + '\nThreat type: ' + data.threat_type;
+          updateProgress(1, 6, 'Pipeline halted — invalid input');
+        } else {
+          const meta = data.meta || {};
+          currentReport = data.report || '';
+          document.getElementById('report-out').textContent = currentReport;
+          updateViz(data);
+          document.getElementById('report-alert-id').textContent = meta.alert_id || '';
+          document.getElementById('meta-id').textContent = meta.alert_id || '—';
+
+          const sev = (meta.severity || '—').toUpperCase();
+          const sevEl = document.getElementById('meta-severity');
+          sevEl.textContent = sev;
+          sevEl.className = 'meta-val severity-' + (meta.severity || 'low');
+
+          document.getElementById('meta-score').textContent = (meta.threat_score || '0') + '/100';
+          document.getElementById('meta-approved').textContent = meta.plan_approved ? '✓ OK' : '⚠ FLAG';
+          document.getElementById('meta-approved').style.color = meta.plan_approved ? '#58D68D' : '#F39C12';
+
+          liveOut.textContent = '✓ INCIDENT TRIAGE COMPLETE\n\nAlert ID: ' + (meta.alert_id || 'N/A') +
+            '\nSeverity: ' + (meta.severity || 'N/A').toUpperCase() +
+            '\nThreat Score: ' + (meta.threat_score || 0) + '/100' +
+            '\nPlan Approved: ' + (meta.plan_approved ? 'YES' : 'FLAGGED') +
+            '\nRetry cycles: ' + (data.retry_count || 0) +
+            '\n\n' + currentReport.slice(0, 400) + '...';
+
+          updateProgress(6, 6, 'Triage complete — incident report generated');
+          document.getElementById('live-label').style.color = '#58D68D';
+          document.querySelectorAll('.tab')[2].click();
+        }
+
+      } catch (e) {
+        liveOut.textContent = 'Network error: ' + e.message;
+        document.getElementById('live-label').style.color = '#E57373';
       }
 
-      addStep(baseKey, info.agent || AGENT_NAMES[baseKey] || key, info.output || '', info.status || 'done', isRetry);
-      updateProgress(Math.min(step, 6), 6, (info.agent || key) + ' — complete');
+      btn.disabled = false;
     }
 
-    if (data.blocked) {
-      blocked++;
-      document.getElementById('st-blocked').textContent = blocked;
-      document.getElementById('sec-text').textContent = 'Alert blocked: ' + data.reason;
-      document.getElementById('sec-banner').classList.add('show');
-      setAgent('guard', 'error');
-      liveOut.textContent = '🛡 BLOCKED by Guard Agent\n\nReason: ' + data.reason + '\nThreat type: ' + data.threat_type;
-      updateProgress(1, 6, 'Pipeline halted — invalid input');
-    } else {
+    function updateViz(data) {
       const meta = data.meta || {};
-      currentReport = data.report || '';
-      document.getElementById('report-out').textContent = currentReport;
-      document.getElementById('report-alert-id').textContent = meta.alert_id || '';
-      document.getElementById('meta-id').textContent = meta.alert_id || '—';
+      const viz = document.getElementById('report-viz');
+      viz.style.display = 'block';
 
-      const sev = (meta.severity || '—').toUpperCase();
-      const sevEl = document.getElementById('meta-severity');
+      // Threat score bar
+      const score = meta.threat_score || 0;
+      const bar = document.getElementById('viz-threat-bar');
+      const barColor = score >= 80 ? '#E74C3C' : score >= 60 ? '#E67E22' : score >= 40 ? '#F39C12' : '#2ECC71';
+      bar.style.width = score + '%';
+      bar.style.background = barColor;
+      document.getElementById('viz-threat-score').textContent = score + '/100';
+      document.getElementById('viz-threat-score').style.color = barColor;
+
+      // Severity
+      const sev = (meta.severity || 'unknown').toUpperCase();
+      const sevEl = document.getElementById('viz-severity');
       sevEl.textContent = sev;
-      sevEl.className = 'meta-val severity-' + (meta.severity || 'low');
+      const sevColors = { CRITICAL: '#E74C3C', HIGH: '#E67E22', MEDIUM: '#F39C12', LOW: '#2ECC71' };
+      sevEl.style.color = sevColors[sev] || 'var(--t1)';
 
-      document.getElementById('meta-score').textContent = (meta.threat_score || '0') + '/100';
-      document.getElementById('meta-approved').textContent = meta.plan_approved ? '✓ OK' : '⚠ FLAG';
-      document.getElementById('meta-approved').style.color = meta.plan_approved ? '#58D68D' : '#F39C12';
+      // Quality
+      document.getElementById('viz-quality').textContent = (meta.quality_score || '—') + (meta.quality_score ? '/100' : '');
 
-      liveOut.textContent = '✓ INCIDENT TRIAGE COMPLETE\n\nAlert ID: ' + (meta.alert_id || 'N/A') +
-        '\nSeverity: ' + (meta.severity || 'N/A').toUpperCase() +
-        '\nThreat Score: ' + (meta.threat_score || 0) + '/100' +
-        '\nPlan Approved: ' + (meta.plan_approved ? 'YES' : 'FLAGGED') +
-        '\nRetry cycles: ' + (data.retry_count || 0) +
-        '\n\n' + currentReport.slice(0, 400) + '...';
+      // Retries
+      document.getElementById('viz-retries').textContent = (data.retry_count || 0) + 'x';
 
-      updateProgress(6, 6, 'Triage complete — incident report generated');
-      document.getElementById('live-label').style.color = '#58D68D';
-      document.querySelectorAll('.tab')[2].click();
+      // Approved
+      const appEl = document.getElementById('viz-approved');
+      appEl.textContent = meta.plan_approved ? '✓ APPROVED' : '⚠ FLAGGED';
+      appEl.style.color = meta.plan_approved ? '#2ECC71' : '#F39C12';
+      appEl.style.fontSize = '16px';
+
+      // Timeline
+      const timeline = document.getElementById('viz-timeline');
+      timeline.innerHTML = '';
+      const agents = [
+        { key: 'guard', label: 'Guard', color: '#E57373' },
+        { key: 'ingestion', label: 'Ingest', color: '#5DADE2' },
+        { key: 'threat_intel', label: 'Threat', color: '#EC7063' },
+        { key: 'remediation', label: 'Remediate', color: '#F5CBA7' },
+        { key: 'review', label: 'Review', color: '#58D68D' },
+        { key: 'reporter', label: 'Report', color: '#C39BD3' }
+      ];
+      agents.forEach((a, i) => {
+        const node = document.createElement('div');
+        node.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;';
+        const retryNote = (data.retry_count > 0 && (a.key === 'remediation' || a.key === 'review'))
+          ? `<div style="font-size:9px;color:var(--yellow);font-family:'DM Mono',monospace;">×${data.retry_count + 1}</div>` : '';
+        node.innerHTML = `
+      <div style="width:36px;height:36px;border-radius:8px;background:${a.color}22;border:0.5px solid ${a.color}55;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:${a.color};font-family:'DM Mono',monospace;">${a.label[0]}</div>
+      ${retryNote}
+      <div style="font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;">${a.label}</div>
+    `;
+        timeline.appendChild(node);
+        if (i < agents.length - 1) {
+          const arrow = document.createElement('div');
+          arrow.style.cssText = 'color:var(--t3);font-size:12px;padding:0 4px;margin-bottom:20px;';
+          arrow.textContent = '→';
+          timeline.appendChild(arrow);
+        }
+      });
     }
 
-  } catch(e) {
-    liveOut.textContent = 'Network error: ' + e.message;
-    document.getElementById('live-label').style.color = '#E57373';
-  }
-
-  btn.disabled = false;
-}
-
-function copyReport() {
-  if (currentReport) navigator.clipboard.writeText(currentReport).catch(()=>{});
-}
-</script>
+    function copyReport() {
+      if (!currentReport) return;
+      try {
+        const el = document.createElement('textarea');
+        el.value = currentReport;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        const btn = document.querySelector('.copy-btn');
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.style.color = '#58D68D';
+        setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+      } catch (e) { }
+    }
+  </script>
 </body>
+
 </html>
