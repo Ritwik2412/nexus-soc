@@ -40,6 +40,28 @@
       --critical-light: rgba(231, 76, 60, 0.1);
     }
 
+    @media (max-width: 768px) {
+  .main { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .arch-flow { flex-direction: column; align-items: center; }
+  .arch-arrow { transform: rotate(90deg); }
+  .guardrail-grid { grid-template-columns: 1fr; }
+  .meta-grid { grid-template-columns: 1fr 1fr; }
+  .tab { padding: 10px 10px; font-size: 11px; }
+  .tab-body { padding: 14px; }
+  .alert-box { padding: 14px; }
+  .q-wrap { flex-direction: column; }
+  .run-btn { width: 100%; justify-content: center; }
+  textarea { min-height: 120px; }
+  .sc-chips { gap: 4px; }
+  .chip { font-size: 10px; padding: 4px 8px; }
+  .report-body { padding: 16px; font-size: 12px; }
+  #report-viz { padding: 14px; }
+  #report-viz > div:first-child { flex-direction: column; }
+  .header-title { font-size: 13px; }
+  .header-right { display: none; }
+}
+
     body {
       font-family: 'DM Sans', sans-serif;
       background: var(--surface);
